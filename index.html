@@ -1,46 +1,312 @@
+<!-- V 2.1.7 -->
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Excel Mapping Tool</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataMap Pro | Excel Mapping Tool</title>
+  
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   <style>
-    body { font-family: Arial; padding: 20px; }
-    h2 { background: #f0f0f0; padding: 8px; }
-    select, input, button { margin: 5px; padding: 5px; }
-    table { border-collapse: collapse; margin-top: 10px; }
-    td, th { border: 1px solid #ccc; padding: 6px; }
+    :root {
+      --primary: #4F46E5; /* Indigo */
+      --primary-hover: #4338ca;
+      --bg: #F3F4F6;
+      --card-bg: #ffffff;
+      --text-main: #1F2937;
+      --text-light: #6B7280;
+      --border: #E5E7EB;
+      --success: #10B981;
+    }
+
+    * { box-sizing: border_box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    h1, h2, h3 { font-family: 'Poppins', sans-serif; margin: 0; }
+    
+    .app-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .app-header h1 { color: var(--primary); font-size: 2.2rem; }
+    .app-header p { color: var(--text-light); margin-top: 5px; }
+
+    /* CARDS */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border);
+      transition: transform 0.2s;
+    }
+
+    .card:hover { transform: translateY(-2px); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 15px;
+    }
+    
+    .step-badge {
+      background: var(--primary);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    /* FILE INPUTS (Hidden) & DROP ZONES */
+    input[type="file"] { display: none; }
+
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: #FAFAFA;
+    }
+
+    .drop-zone:hover {
+      border-color: var(--primary);
+      background: #EEF2FF;
+    }
+
+    .drop-zone i { font-size: 2rem; color: var(--text-light); margin-bottom: 10px; }
+    .drop-zone p { margin: 0; font-size: 0.9rem; color: var(--text-light); }
+    .file-name { color: var(--primary); font-weight: 600; margin-top: 8px; display: block;}
+
+    /* CONTROLS */
+    .control-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    select, input[type="text"], input[type="number"] {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+      flex-grow: 1;
+    }
+    
+    select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px #E0E7FF; }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button:hover { background: var(--primary-hover); }
+    button:active { transform: scale(0.98); }
+
+    .btn-secondary { background: var(--text-light); }
+    .btn-success { background: var(--success); width: 100%; justify-content: center; font-size: 1.1rem; padding: 15px;}
+    .btn-success:hover { background: #059669; }
+
+    /* MAPPING TABLE */
+    .mapping-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    
+    th {
+      background: #F9FAFB;
+      position: sticky;
+      top: 0;
+      text-align: left;
+      padding: 12px 15px;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    td { padding: 10px 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #F3F4F6; }
+
+    td select { width: 100%; }
+
+    /* COLUMNS LIST */
+    .cols-preview {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 10px;
+      background: #F9FAFB;
+      padding: 10px;
+      border-radius: 6px;
+      display: none; /* Hidden until loaded */
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container { padding: 0 10px; }
+      .control-group { flex-direction: column; }
+    }
   </style>
 </head>
 
 <body>
 
-<h2>1️⃣ Base File</h2>
-<input type="file" id="baseFile">
-<select id="baseSheets"></select>
-<div id="baseCols"></div>
-<br>
-<input type="text" id="newBaseCol" placeholder="New Base Column Name">
-<button onclick="addBaseColumn()">Add Column</button>
+<div class="container">
+  
+  <div class="app-header">
+    <h1><i class="fa-solid fa-layer-group"></i> DataMap Pro</h1>
+    <p>Map columns between Excel files effortlessly.</p>
+  </div>
 
-<h2>2️⃣ Source File</h2>
-<input type="file" id="sourceFile">
-<select id="sourceSheets"></select>
-<br>
-Header Row No:
-<input type="number" id="headerRow" value="1" min="1">
-<div id="sourceCols"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge">1</div>
+      <h3>Base Template</h3>
+    </div>
+    
+    <div class="drop-zone" onclick="document.getElementById('baseFile').click()">
+      <i class="fa-solid fa-file-excel"></i>
+      <p>Click to upload Base Excel File</p>
+      <span id="baseFileName" class="file-name"></span>
+    </div>
+    <input type="file" id="baseFile" accept=".xlsx, .xls">
 
-<h2>3️⃣ Column Mapping</h2>
-<div id="mappingArea"></div>
+    <div class="control-group">
+      <select id="baseSheets"><option>Wait for file...</option></select>
+    </div>
 
-<button onclick="generateExcel()">Generate Final Excel</button>
+    <div class="control-group" style="margin-top: 15px; border-top: 1px dashed var(--border); padding-top:15px;">
+      <input type="text" id="newBaseCol" placeholder="Add new column (e.g., Status)">
+      <button onclick="addBaseColumn()" class="btn-secondary"><i class="fa-solid fa-plus"></i> Add Col</button>
+    </div>
+
+    <div id="baseCols" class="cols-preview"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge">2</div>
+      <h3>Source Data</h3>
+    </div>
+
+    <div class="drop-zone" onclick="document.getElementById('sourceFile').click()">
+      <i class="fa-solid fa-file-import"></i>
+      <p>Click to upload Source Data File</p>
+      <span id="sourceFileName" class="file-name"></span>
+    </div>
+    <input type="file" id="sourceFile" accept=".xlsx, .xls">
+
+    <div class="control-group">
+      <select id="sourceSheets"><option>Wait for file...</option></select>
+      <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
+        <label>Header Row:</label>
+        <input type="number" id="headerRow" value="1" min="1" style="width: 60px;">
+      </div>
+    </div>
+
+    <div id="sourceCols" class="cols-preview"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge">3</div>
+      <h3>Map Columns</h3>
+    </div>
+    
+    <div id="mappingArea" class="mapping-container">
+      <div style="padding: 20px; text-align: center; color: var(--text-light);">
+        Upload files to begin mapping...
+      </div>
+    </div>
+  </div>
+
+  <button onclick="generateExcel()" class="btn-success">
+    <i class="fa-solid fa-file-export"></i> Generate Final Excel
+  </button>
+
+</div>
 
 <script>
 let baseWB, sourceWB;
 let baseHeaders = [], sourceHeaders = [];
 let sourceData = [];
 
-/* ---------- COMMON ---------- */
+/* ---------- UI HELPERS ---------- */
+function updateFileName(inputId, spanId) {
+  const fileInput = document.getElementById(inputId);
+  const span = document.getElementById(spanId);
+  if (fileInput.files.length > 0) {
+    span.textContent = fileInput.files[0].name;
+    span.style.color = "var(--success)";
+  }
+}
+
+function showCols(id, title, cols) {
+  const el = document.getElementById(id);
+  el.style.display = 'block';
+  el.innerHTML = `<strong>${title}:</strong> ${cols.join(", ")}`;
+}
+
+function fillSelect(id, list) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="">-- Select Sheet --</option>` +
+    list.map(v => `<option value="${v}">${v}</option>`).join("");
+}
+
 function readExcel(file, cb) {
   const reader = new FileReader();
   reader.onload = e => {
@@ -50,23 +316,13 @@ function readExcel(file, cb) {
   reader.readAsArrayBuffer(file);
 }
 
-function fillSelect(id, list) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = `<option value="">-- Select --</option>` +
-    list.map(v => `<option value="${v}">${v}</option>`).join("");
-}
-
-function showCols(id, title, cols) {
-  document.getElementById(id).innerHTML =
-    `<b>${title}:</b><br>${cols.join(", ")}`;
-}
-
 /* ---------- BASE FILE ---------- */
 document.getElementById("baseFile").onchange = e => {
+  updateFileName("baseFile", "baseFileName");
   readExcel(e.target.files[0], wb => {
     baseWB = wb;
     fillSelect("baseSheets", wb.SheetNames);
-    document.getElementById("baseCols").innerHTML = "";
+    document.getElementById("baseCols").style.display = "none";
   });
 };
 
@@ -76,17 +332,17 @@ document.getElementById("baseSheets").onchange = () => {
 
   const data = XLSX.utils.sheet_to_json(baseWB.Sheets[sheet], { header: 1 });
   baseHeaders = data[0] || [];
-  showCols("baseCols", "Base Columns", baseHeaders);
-
-  buildMapping(); // refresh mapping
+  showCols("baseCols", "Detected Columns", baseHeaders);
+  buildMapping();
 };
 
 /* ---------- SOURCE FILE ---------- */
 document.getElementById("sourceFile").onchange = e => {
+  updateFileName("sourceFile", "sourceFileName");
   readExcel(e.target.files[0], wb => {
     sourceWB = wb;
     fillSelect("sourceSheets", wb.SheetNames);
-    document.getElementById("sourceCols").innerHTML = "";
+    document.getElementById("sourceCols").style.display = "none";
   });
 };
 
@@ -95,123 +351,132 @@ document.getElementById("headerRow").oninput = loadSource;
 
 function loadSource() {
   if (!sourceWB) return;
-
   const sheet = document.getElementById("sourceSheets").value;
   const headerRow = parseInt(document.getElementById("headerRow").value);
-
   if (!sheet || headerRow < 1) return;
 
-  const data = XLSX.utils.sheet_to_json(
-    sourceWB.Sheets[sheet],
-    { header: 1 }
-  );
+  /* 🔥 UPDATED: raw: false ensures Dates are read as Text */
+  const data = XLSX.utils.sheet_to_json(sourceWB.Sheets[sheet], { 
+    header: 1, 
+    raw: false,
+    dateNF: 'yyyy-mm-dd' 
+  });
 
   sourceHeaders = data[headerRow - 1] || [];
   sourceData = data.slice(headerRow);
 
-  showCols("sourceCols", "Source Columns", sourceHeaders);
+  showCols("sourceCols", "Detected Columns", sourceHeaders);
   buildMapping();
 }
 
 /* ---------- MAPPING ---------- */
 function buildMapping() {
-  if (baseHeaders.length === 0 || sourceHeaders.length === 0) {
-    document.getElementById("mappingArea").innerHTML = "";
-    return;
-  }
+  if (baseHeaders.length === 0 || sourceHeaders.length === 0) return;
 
   let html = `<table>
-    <tr><th>Source Column</th><th>Map To Base Column</th></tr>`;
+    <thead>
+      <tr>
+        <th width="40%">Source Column</th>
+        <th width="10%" style="text-align:center;"><i class="fa-solid fa-arrow-right"></i></th>
+        <th width="50%">Base Column (Target)</th>
+      </tr>
+    </thead><tbody>`;
 
   sourceHeaders.forEach(sc => {
+    // Smart Auto-Match (if names are identical, pre-select it)
+    let selected = baseHeaders.includes(sc) ? `value="${sc}" selected` : "";
+    let colorStyle = selected ? "border: 2px solid var(--success);" : "";
+
     html += `<tr>
       <td>${sc}</td>
+      <td style="text-align:center; color:var(--text-light);">→</td>
       <td>
-        <select data-src="${sc}">
+        <select data-src="${sc}" style="${colorStyle}">
           <option value="">-- Ignore --</option>
-          ${baseHeaders.map(bc => `<option value="${bc}">${bc}</option>`).join("")}
+          ${baseHeaders.map(bc => {
+             const isSel = bc === sc ? "selected" : "";
+             return `<option value="${bc}" ${isSel}>${bc}</option>`;
+          }).join("")}
         </select>
       </td>
     </tr>`;
   });
 
-  html += `</table>`;
+  html += `</tbody></table>`;
   document.getElementById("mappingArea").innerHTML = html;
 }
 
-/* ---------- FINAL EXCEL ---------- */
-function generateExcel() {
+/* ---------- ADD COLUMN ---------- */
+function addBaseColumn() {
+  const colName = document.getElementById("newBaseCol").value.trim();
+  if (!colName) { alert("Enter a column name!"); return; }
+  if (baseHeaders.includes(colName)) { alert("Column exists!"); return; }
 
-  /* 1️⃣ Build Mapping */
+  baseHeaders.push(colName);
+
+  // Update In-Memory Workbook
+  if (baseWB && document.getElementById("baseSheets").value) {
+    const sheetName = document.getElementById("baseSheets").value;
+    let data = XLSX.utils.sheet_to_json(baseWB.Sheets[sheetName], { header: 1 });
+    // Add empty cell to existing rows
+    for (let i = 1; i < data.length; i++) data[i].push("");
+    data[0] = baseHeaders;
+    baseWB.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(data);
+  }
+
+  showCols("baseCols", "Updated Columns", baseHeaders);
+  buildMapping();
+  document.getElementById("newBaseCol").value = "";
+}
+
+/* ---------- GENERATE ---------- */
+function generateExcel() {
   const map = {};
+  let hasMapping = false;
   document.querySelectorAll("#mappingArea select").forEach(s => {
-    if (s.value) map[s.dataset.src] = s.value;
+    if (s.value) {
+      map[s.dataset.src] = s.value;
+      hasMapping = true;
+    }
   });
 
-  /* 2️⃣ Read Base Sheet Existing Data */
   const baseSheetName = document.getElementById("baseSheets").value;
+  if (!baseSheetName) { alert("Please select a Base Sheet first."); return; }
+  if (!hasMapping) { 
+    if(!confirm("No columns mapped. Generate file anyway?")) return; 
+  }
+
   const baseSheet = baseWB.Sheets[baseSheetName];
-
-  // header: 1 → array format
   let baseData = XLSX.utils.sheet_to_json(baseSheet, { header: 1 });
+  const baseHeaderRow = baseData[0]; 
+  let baseRows = baseData.length > 1 ? baseData.slice(1) : []; 
 
-  const baseHeaderRow = baseData[0]; // headers
-  let baseRows = baseData.slice(1);  // existing data
+  // Normalize base rows
+  baseRows = baseRows.map(r => {
+    while (r.length < baseHeaderRow.length) r.push("");
+    return r;
+  });
 
-  /* 3️⃣ Convert Source → Base Structure */
+  // Map Source Data
   const newRows = sourceData.map(r => {
     let row = new Array(baseHeaderRow.length).fill("");
-
     sourceHeaders.forEach((h, i) => {
       if (map[h]) {
         const baseIndex = baseHeaderRow.indexOf(map[h]);
-        if (baseIndex > -1) {
-          row[baseIndex] = r[i];
-        }
+        if (baseIndex > -1) row[baseIndex] = r[i];
       }
     });
     return row;
   });
 
-  /* 4️⃣ Append */
   const finalData = [baseHeaderRow, ...baseRows, ...newRows];
-
-  /* 5️⃣ Generate Excel */
   const ws = XLSX.utils.aoa_to_sheet(finalData);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Final");
-
-  XLSX.writeFile(wb, "Mapped_Output.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "Mapped_Data");
+  
+  XLSX.writeFile(wb, "Final_Mapped_Output.xlsx");
 }
-
-function addBaseColumn() {
-  const colName = document.getElementById("newBaseCol").value.trim();
-
-  if (!colName) {
-    alert("Please enter column name");
-    return;
-  }
-
-  if (baseHeaders.includes(colName)) {
-    alert("Column already exists");
-    return;
-  }
-
-  // 1️⃣ Add to baseHeaders
-  baseHeaders.push(colName);
-
-  // 2️⃣ Update UI
-  showCols("baseCols", "Base Columns", baseHeaders);
-
-  // 3️⃣ Rebuild mapping
-  buildMapping();
-
-  document.getElementById("newBaseCol").value = "";
-}
-
-
 </script>
-
 
 </body>
 </html>
