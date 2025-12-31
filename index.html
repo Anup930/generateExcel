@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Excel Mapping Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    h2 { background: #f0f0f0; padding: 8px; }
+    select, input, button { margin: 5px; padding: 5px; }
+    table { border-collapse: collapse; margin-top: 10px; }
+    td, th { border: 1px solid #ccc; padding: 6px; }
+  </style>
+</head>
+
+<body>
+
+<h2>1️⃣ Base File</h2>
+<input type="file" id="baseFile">
+<select id="baseSheets"></select>
+<div id="baseCols"></div>
+<br>
+<input type="text" id="newBaseCol" placeholder="New Base Column Name">
+<button onclick="addBaseColumn()">Add Column</button>
+
+<h2>2️⃣ Source File</h2>
+<input type="file" id="sourceFile">
+<select id="sourceSheets"></select>
+<br>
+Header Row No:
+<input type="number" id="headerRow" value="1" min="1">
+<div id="sourceCols"></div>
+
+<h2>3️⃣ Column Mapping</h2>
+<div id="mappingArea"></div>
+
+<button onclick="generateExcel()">Generate Final Excel</button>
+
+<script>
+let baseWB, sourceWB;
+let baseHeaders = [], sourceHeaders = [];
+let sourceData = [];
+
+/* ---------- COMMON ---------- */
+function readExcel(file, cb) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+    cb(wb);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function fillSelect(id, list) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="">-- Select --</option>` +
+    list.map(v => `<option value="${v}">${v}</option>`).join("");
+}
+
+function showCols(id, title, cols) {
+  document.getElementById(id).innerHTML =
+    `<b>${title}:</b><br>${cols.join(", ")}`;
+}
+
+/* ---------- BASE FILE ---------- */
+document.getElementById("baseFile").onchange = e => {
+  readExcel(e.target.files[0], wb => {
+    baseWB = wb;
+    fillSelect("baseSheets", wb.SheetNames);
+    document.getElementById("baseCols").innerHTML = "";
+  });
+};
+
+document.getElementById("baseSheets").onchange = () => {
+  const sheet = document.getElementById("baseSheets").value;
+  if (!sheet) return;
+
+  const data = XLSX.utils.sheet_to_json(baseWB.Sheets[sheet], { header: 1 });
+  baseHeaders = data[0] || [];
+  showCols("baseCols", "Base Columns", baseHeaders);
+
+  buildMapping(); // refresh mapping
+};
+
+/* ---------- SOURCE FILE ---------- */
+document.getElementById("sourceFile").onchange = e => {
+  readExcel(e.target.files[0], wb => {
+    sourceWB = wb;
+    fillSelect("sourceSheets", wb.SheetNames);
+    document.getElementById("sourceCols").innerHTML = "";
+  });
+};
+
+document.getElementById("sourceSheets").onchange = loadSource;
+document.getElementById("headerRow").oninput = loadSource;
+
+function loadSource() {
+  if (!sourceWB) return;
+
+  const sheet = document.getElementById("sourceSheets").value;
+  const headerRow = parseInt(document.getElementById("headerRow").value);
+
+  if (!sheet || headerRow < 1) return;
+
+  const data = XLSX.utils.sheet_to_json(
+    sourceWB.Sheets[sheet],
+    { header: 1 }
+  );
+
+  sourceHeaders = data[headerRow - 1] || [];
+  sourceData = data.slice(headerRow);
+
+  showCols("sourceCols", "Source Columns", sourceHeaders);
+  buildMapping();
+}
+
+/* ---------- MAPPING ---------- */
+function buildMapping() {
+  if (baseHeaders.length === 0 || sourceHeaders.length === 0) {
+    document.getElementById("mappingArea").innerHTML = "";
+    return;
+  }
+
+  let html = `<table>
+    <tr><th>Source Column</th><th>Map To Base Column</th></tr>`;
+
+  sourceHeaders.forEach(sc => {
+    html += `<tr>
+      <td>${sc}</td>
+      <td>
+        <select data-src="${sc}">
+          <option value="">-- Ignore --</option>
+          ${baseHeaders.map(bc => `<option value="${bc}">${bc}</option>`).join("")}
+        </select>
+      </td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+  document.getElementById("mappingArea").innerHTML = html;
+}
+
+/* ---------- FINAL EXCEL ---------- */
+function generateExcel() {
+
+  /* 1️⃣ Build Mapping */
+  const map = {};
+  document.querySelectorAll("#mappingArea select").forEach(s => {
+    if (s.value) map[s.dataset.src] = s.value;
+  });
+
+  /* 2️⃣ Read Base Sheet Existing Data */
+  const baseSheetName = document.getElementById("baseSheets").value;
+  const baseSheet = baseWB.Sheets[baseSheetName];
+
+  // header: 1 → array format
+  let baseData = XLSX.utils.sheet_to_json(baseSheet, { header: 1 });
+
+  const baseHeaderRow = baseData[0]; // headers
+  let baseRows = baseData.slice(1);  // existing data
+
+  /* 3️⃣ Convert Source → Base Structure */
+  const newRows = sourceData.map(r => {
+    let row = new Array(baseHeaderRow.length).fill("");
+
+    sourceHeaders.forEach((h, i) => {
+      if (map[h]) {
+        const baseIndex = baseHeaderRow.indexOf(map[h]);
+        if (baseIndex > -1) {
+          row[baseIndex] = r[i];
+        }
+      }
+    });
+    return row;
+  });
+
+  /* 4️⃣ Append */
+  const finalData = [baseHeaderRow, ...baseRows, ...newRows];
+
+  /* 5️⃣ Generate Excel */
+  const ws = XLSX.utils.aoa_to_sheet(finalData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Final");
+
+  XLSX.writeFile(wb, "Mapped_Output.xlsx");
+}
+
+function addBaseColumn() {
+  const colName = document.getElementById("newBaseCol").value.trim();
+
+  if (!colName) {
+    alert("Please enter column name");
+    return;
+  }
+
+  if (baseHeaders.includes(colName)) {
+    alert("Column already exists");
+    return;
+  }
+
+  // 1️⃣ Add to baseHeaders
+  baseHeaders.push(colName);
+
+  // 2️⃣ Update UI
+  showCols("baseCols", "Base Columns", baseHeaders);
+
+  // 3️⃣ Rebuild mapping
+  buildMapping();
+
+  document.getElementById("newBaseCol").value = "";
+}
+
+
+</script>
+
+
+</body>
+</html>
