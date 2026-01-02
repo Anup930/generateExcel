@@ -151,24 +151,36 @@
     /* PREVIEW TABLE */
     .preview-box {
       margin-top: 15px;
-      max-height: 200px;
+      max-height: 250px; /* Increased height slightly */
       overflow: auto;
       border: 1px solid var(--border);
       border-radius: 6px;
-      background: #F9FAFB;
+      background: #fff;
       display: none; 
     }
     .preview-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate; /* Required for sticky header */
+      border-spacing: 0;
       font-size: 0.8rem;
     }
     .preview-table th, .preview-table td {
-      border: 1px solid #ddd;
-      padding: 6px;
+      border-bottom: 1px solid #ddd;
+      border-right: 1px solid #eee;
+      padding: 8px;
       white-space: nowrap;
     }
-    
+    /* Sticky Header Styling */
+    .preview-table thead th {
+      background: #f1f5f9;
+      color: var(--text-main);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-top: none;
+      font-weight: 600;
+    }
+
     /* MAPPING TABLE */
     .mapping-container {
       max-height: 400px;
@@ -313,25 +325,41 @@ function updateFileName(inputId, spanId) {
   }
 }
 
-function renderPreview(containerId, data, startRowIndex = 0) {
+// 🔥 UPDATED PREVIEW FUNCTION WITH HEADERS
+function renderPreview(containerId, data, startRowIndex = 0, headers = []) {
   const container = document.getElementById(containerId);
   container.style.display = 'block';
   if(!data || data.length === 0) return;
 
-  // Show top 20 rows of the selected data range
-  const previewData = data.slice(0, 20);
+  const previewData = data.slice(0, 20); // Top 20 rows
   
   let html = `<table class="preview-table">`;
-  previewData.forEach((row, i) => {
-    // Show actual Excel row number (Index + Start + 1)
-    const actualRow = startRowIndex + i + 1;
-    html += `<tr><td style="background:#f4f4f4; width:30px; text-align:center;">${actualRow}</td>`;
-    row.forEach(cell => {
-      html += `<td>${cell !== undefined ? cell : ""}</td>`;
+
+  // 1️⃣ Render THEAD (Header Row)
+  if (headers.length > 0) {
+    html += `<thead><tr><th style="width:40px; text-align:center;">#</th>`;
+    headers.forEach(h => {
+      html += `<th>${h}</th>`;
     });
+    html += `</tr></thead>`;
+  }
+
+  // 2️⃣ Render TBODY (Data Rows)
+  html += `<tbody>`;
+  previewData.forEach((row, i) => {
+    const actualRow = startRowIndex + i + 1;
+    html += `<tr><td style="background:#f8f9fa; text-align:center; font-weight:bold; color:#666;">${actualRow}</td>`;
+    
+    // Iterate columns to match header count (fixes alignment issues)
+    const colCount = Math.max(row.length, headers.length);
+    for(let c=0; c < colCount; c++) {
+       const cell = row[c];
+       html += `<td>${cell !== undefined ? cell : ""}</td>`;
+    }
     html += `</tr>`;
   });
-  html += `</table>`;
+  html += `</tbody></table>`;
+  
   container.innerHTML = html;
 }
 
@@ -374,12 +402,13 @@ function loadBase() {
     header: 1, raw: false, dateNF: 'yyyy-mm-dd' 
   });
 
-  renderPreview("basePreview", data);
-
   if (headerRowIdx > 0 && data.length >= headerRowIdx) {
     baseHeaders = data[headerRowIdx - 1]; 
     document.getElementById("baseCols").innerHTML = `<strong>Detected Columns:</strong> ${baseHeaders.join(", ")}`;
   }
+
+  // Pass headers to preview
+  renderPreview("basePreview", data, 0, baseHeaders);
 
   buildMapping();
 }
@@ -394,7 +423,6 @@ document.getElementById("sourceFile").onchange = e => {
 };
 
 document.getElementById("sourceSheets").onchange = () => {
-  // Reset custom range when sheet changes
   document.getElementById("sourceStartRow").value = "";
   document.getElementById("sourceEndRow").value = "";
   loadSource();
@@ -413,48 +441,34 @@ function loadSource() {
 
   if (!sheetName || !headerRowInput.value) return;
 
-  const headerRowIdx = parseInt(headerRowInput.value); // 1-based
+  const headerRowIdx = parseInt(headerRowInput.value); 
 
-  // Read ALL data first
   const allData = XLSX.utils.sheet_to_json(sourceWB.Sheets[sheetName], { 
     header: 1, raw: false, dateNF: 'yyyy-mm-dd' 
   });
 
-  // 1️⃣ AUTO-CALCULATE DEFAULTS if inputs are empty
-  if(startRowInput.value === "") {
-    // Default Start = Header + 1
-    startRowInput.placeholder = headerRowIdx + 1;
-  }
-  if(endRowInput.value === "") {
-    // Default End = Last Row of File
-    endRowInput.placeholder = allData.length;
-  }
+  // Defaults
+  if(startRowInput.value === "") startRowInput.placeholder = headerRowIdx + 1;
+  if(endRowInput.value === "") endRowInput.placeholder = allData.length;
 
-  // 2️⃣ DETERMINE ACTUAL RANGE
   let startRowIdx = startRowInput.value ? parseInt(startRowInput.value) : (headerRowIdx + 1);
   let endRowIdx = endRowInput.value ? parseInt(endRowInput.value) : allData.length;
 
-  // Validation
   if (startRowIdx < 1) startRowIdx = 1;
   if (endRowIdx > allData.length) endRowIdx = allData.length;
-  if (endRowIdx < startRowIdx) endRowIdx = startRowIdx; // Prevent negative range
+  if (endRowIdx < startRowIdx) endRowIdx = startRowIdx; 
 
-  // 3️⃣ FETCH HEADERS (From Header Row)
+  // Capture Headers
   if (headerRowIdx > 0 && allData.length >= headerRowIdx) {
     sourceHeaders = allData[headerRowIdx - 1];
     document.getElementById("sourceCols").innerHTML = `<strong>Detected Columns:</strong> ${sourceHeaders.join(", ")}`;
   }
 
-  // 4️⃣ FETCH DATA (From Start to End Range)
-  // .slice(start, end) -> start is inclusive, end is exclusive in JS arrays.
-  // Excel Rows are 1-based. 
-  // If Start=50, index=49. If End=70, we want to include index 69.
-  // slice(49, 70) gives indices 49...69. Perfect.
+  // Slice Data
   sourceData = allData.slice(startRowIdx - 1, endRowIdx);
 
-  // 5️⃣ RENDER PREVIEW (Show specific slice)
-  // Pass (startRowIdx - 1) so preview shows correct Excel row numbers (e.g. 50, 51...)
-  renderPreview("sourcePreview", sourceData, startRowIdx - 1);
+  // 🔥 Pass HEADERS to Preview
+  renderPreview("sourcePreview", sourceData, startRowIdx - 1, sourceHeaders);
 
   buildMapping();
 }
@@ -559,7 +573,7 @@ function generateExcel() {
     return r;
   });
 
-  // Map Source Data (using sliced sourceData)
+  // Map Source Data
   const newRows = sourceData.map(r => {
     let row = new Array(baseHeaderRow.length).fill("");
     sourceHeaders.forEach((h, i) => {
