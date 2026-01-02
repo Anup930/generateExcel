@@ -1,3 +1,5 @@
+<!-- Verion 4 -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +37,7 @@
 
     .container {
       width: 100%;
-      max-width: 1000px; /* Made slightly wider for previews */
+      max-width: 1000px;
       display: flex;
       flex-direction: column;
       gap: 25px;
@@ -136,7 +138,7 @@
     .btn-success { background: var(--success); width: 100%; justify-content: center; font-size: 1.1rem; padding: 15px;}
     .btn-success:hover { background: #059669; }
 
-    /* PREVIEW TABLE (New Feature) */
+    /* PREVIEW TABLE */
     .preview-box {
       margin-top: 15px;
       max-height: 200px;
@@ -144,7 +146,7 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       background: #F9FAFB;
-      display: none; /* Hidden by default */
+      display: none; 
     }
     .preview-table {
       width: 100%;
@@ -244,6 +246,11 @@
         <label style="font-size:0.9rem; color:var(--text-light);">Header Row:</label>
         <input type="number" id="sourceHeaderRow" value="1" min="1" style="width: 60px;">
       </div>
+
+      <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
+        <label style="font-size:0.9rem; color:var(--text-light);">Last Row:</label>
+        <input type="number" id="sourceLastRow" placeholder="Auto" min="1" style="width: 70px;">
+      </div>
     </div>
 
     <div class="control-group" style="padding-top:10px;">
@@ -294,12 +301,12 @@ function renderPreview(containerId, data) {
   container.style.display = 'block';
   if(!data || data.length === 0) return;
 
-  // Take first 20 rows
-  const previewData = data.slice(0, 30);
+  // Show top 20 rows of the selected data range
+  const previewData = data.slice(0, 20);
   
   let html = `<table class="preview-table">`;
   previewData.forEach((row, i) => {
-    html += `<tr><td style="background:#f4f4f4; width:30px;">${i+1}</td>`; // Row Number
+    html += `<tr><td style="background:#f4f4f4; width:30px;">${i+1}</td>`;
     row.forEach(cell => {
       html += `<td>${cell !== undefined ? cell : ""}</td>`;
     });
@@ -333,7 +340,6 @@ document.getElementById("baseFile").onchange = e => {
   });
 };
 
-// Trigger loadBase when Sheet OR Header Row changes
 document.getElementById("baseSheets").onchange = loadBase;
 document.getElementById("baseHeaderRow").oninput = loadBase;
 
@@ -345,17 +351,14 @@ function loadBase() {
   if (!sheetName || !headerRowInput) return;
   const headerRowIdx = parseInt(headerRowInput);
 
-  // Read data
   const data = XLSX.utils.sheet_to_json(baseWB.Sheets[sheetName], { 
     header: 1, raw: false, dateNF: 'yyyy-mm-dd' 
   });
 
-  // Render Preview (Top 20 raw rows)
   renderPreview("basePreview", data);
 
-  // Set Headers based on Row selection
   if (headerRowIdx > 0 && data.length >= headerRowIdx) {
-    baseHeaders = data[headerRowIdx - 1]; // Row 1 is index 0
+    baseHeaders = data[headerRowIdx - 1]; 
     document.getElementById("baseCols").innerHTML = `<strong>Detected Columns:</strong> ${baseHeaders.join(", ")}`;
   }
 
@@ -371,85 +374,93 @@ document.getElementById("sourceFile").onchange = e => {
   });
 };
 
-// Trigger loadSource when Sheet OR Header Row changes
-document.getElementById("sourceSheets").onchange = loadSource;
+// Reset Last Row Input when Sheet changes
+document.getElementById("sourceSheets").onchange = () => {
+  document.getElementById("sourceLastRow").value = ""; 
+  loadSource();
+};
+
 document.getElementById("sourceHeaderRow").oninput = loadSource;
+document.getElementById("sourceLastRow").oninput = loadSource;
 
 function loadSource() {
   if (!sourceWB) return;
   const sheetName = document.getElementById("sourceSheets").value;
   const headerRowInput = document.getElementById("sourceHeaderRow").value;
+  const lastRowInput = document.getElementById("sourceLastRow");
 
   if (!sheetName || !headerRowInput) return;
   const headerRowIdx = parseInt(headerRowInput);
 
-  const data = XLSX.utils.sheet_to_json(sourceWB.Sheets[sheetName], { 
+  // Read ALL data first
+  const allData = XLSX.utils.sheet_to_json(sourceWB.Sheets[sheetName], { 
     header: 1, raw: false, dateNF: 'yyyy-mm-dd' 
   });
 
-  // Render Preview
-  renderPreview("sourcePreview", data);
+  // Auto-set Last Row if empty
+  if(lastRowInput.value === "") {
+    lastRowInput.value = allData.length;
+  }
+  
+  let lastRowIdx = parseInt(lastRowInput.value);
+  
+  // Validation: Ensure valid range
+  if(lastRowIdx > allData.length) lastRowIdx = allData.length;
+  if(lastRowIdx < headerRowIdx) lastRowIdx = headerRowIdx;
 
-  // Set Headers & Data
-  if (headerRowIdx > 0 && data.length >= headerRowIdx) {
-    sourceHeaders = data[headerRowIdx - 1];
-    sourceData = data.slice(headerRowIdx); // Data starts after header
+  // ✂️ SLICE DATA: From Header to Last Row
+  const relevantData = allData.slice(0, lastRowIdx);
+
+  // Define Headers and Body
+  if (headerRowIdx > 0 && relevantData.length >= headerRowIdx) {
+    sourceHeaders = relevantData[headerRowIdx - 1];
+    
+    // Data is everything AFTER the header row, up to the cut-off
+    sourceData = relevantData.slice(headerRowIdx); 
+    
     document.getElementById("sourceCols").innerHTML = `<strong>Detected Columns:</strong> ${sourceHeaders.join(", ")}`;
+    
+    // Preview uses the sliced data so user sees exactly what will be imported
+    renderPreview("sourcePreview", relevantData);
   }
 
   buildMapping();
 }
 
 /* ---------- ADD COLUMN FUNCTIONS ---------- */
-
-// 1. Add to Base
 function addBaseColumn() {
   const colName = document.getElementById("newBaseCol").value.trim();
   if (!colName || !baseWB) return;
-  
   baseHeaders.push(colName);
   updateSheetInMemory(baseWB, "baseSheets", baseHeaders);
-  
-  loadBase(); // Refresh UI
+  loadBase(); 
   document.getElementById("newBaseCol").value = "";
 }
 
-// 2. Add to Source (NEW FEATURE)
 function addSourceColumn() {
   const colName = document.getElementById("newSourceCol").value.trim();
   if (!colName || !sourceWB) return;
-
   sourceHeaders.push(colName);
-  
-  // Need to update the source sheet in memory so data arrays align
   updateSheetInMemory(sourceWB, "sourceSheets", sourceHeaders);
-
-  loadSource(); // Refresh UI
+  loadSource(); 
   document.getElementById("newSourceCol").value = "";
 }
 
-// Helper to update sheet in memory (adds empty cell to existing rows)
 function updateSheetInMemory(workbook, selectId, newHeaders) {
   const sheetName = document.getElementById(selectId).value;
   const headerRowIdx = parseInt(document.getElementById(selectId === "baseSheets" ? "baseHeaderRow" : "sourceHeaderRow").value) - 1;
-  
   let data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
   
-  // Update header row
   if(data[headerRowIdx]) {
-      // Ensure header row is long enough
       while(data[headerRowIdx].length < newHeaders.length) data[headerRowIdx].push("");
-      // Update the specific new header
       data[headerRowIdx][newHeaders.length - 1] = newHeaders[newHeaders.length - 1];
   }
 
-  // Add blank cells to all other rows to match width
   for (let i = 0; i < data.length; i++) {
      if(i !== headerRowIdx) {
        while(data[i].length < newHeaders.length) data[i].push("");
      }
   }
-
   workbook.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(data);
 }
 
@@ -503,21 +514,15 @@ function generateExcel() {
   const headerRowIdx = parseInt(document.getElementById("baseHeaderRow").value) - 1;
 
   let baseData = XLSX.utils.sheet_to_json(baseSheet, { header: 1 });
-  
-  // Logic: Keep everything ABOVE header row, and the Header Row itself
   const topRows = baseData.slice(0, headerRowIdx + 1); 
   const baseHeaderRow = topRows[headerRowIdx];
-  
-  // Existing data rows (after header)
   let existingRows = baseData.slice(headerRowIdx + 1);
 
-  // Normalize existing rows
   existingRows = existingRows.map(r => {
     while (r.length < baseHeaderRow.length) r.push("");
     return r;
   });
 
-  // Map Source Data
   const newRows = sourceData.map(r => {
     let row = new Array(baseHeaderRow.length).fill("");
     sourceHeaders.forEach((h, i) => {
