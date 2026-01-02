@@ -295,7 +295,7 @@ function renderPreview(containerId, data) {
   if(!data || data.length === 0) return;
 
   // Take first 20 rows
-  const previewData = data.slice(0, 20);
+  const previewData = data.slice(0, 30);
   
   let html = `<table class="preview-table">`;
   previewData.forEach((row, i) => {
