@@ -1,5 +1,3 @@
-<!-- Verion 4 -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,7 +99,7 @@
 
     .control-group {
       display: flex;
-      gap: 10px;
+      gap: 15px;
       margin-top: 15px;
       flex-wrap: wrap;
       align-items: center;
@@ -112,12 +110,24 @@
       padding: 10px;
       border: 1px solid var(--border);
       border-radius: 6px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       outline: none;
     }
     
-    select { flex-grow: 1; }
+    select { flex-grow: 1; min-width: 200px; }
     
+    .row-input-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #F9FAFB;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid #eee;
+    }
+    .row-input-group label { font-size: 0.85rem; color: var(--text-light); font-weight: 500; }
+    .row-input-group input { width: 70px; padding: 5px; text-align: center; border-color: #ddd; }
+
     /* Buttons */
     button {
       background: var(--primary);
@@ -158,8 +168,7 @@
       padding: 6px;
       white-space: nowrap;
     }
-    .preview-table th { background: #eee; position: sticky; top: 0; }
-
+    
     /* MAPPING TABLE */
     .mapping-container {
       max-height: 400px;
@@ -167,7 +176,6 @@
       border: 1px solid var(--border);
       border-radius: 8px;
     }
-
     .map-table { width: 100%; border-collapse: collapse; }
     .map-table th {
       background: #F9FAFB;
@@ -192,7 +200,7 @@
   
   <div class="app-header">
     <h1><i class="fa-solid fa-layer-group"></i> DataMap Pro</h1>
-    <p>Map columns, preview data, and generate reports.</p>
+    <p>Flexible Excel Mapping with Range Selection</p>
   </div>
 
   <div class="card">
@@ -211,9 +219,9 @@
     <div class="control-group">
       <select id="baseSheets"><option>Wait for file...</option></select>
       
-      <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
-        <label style="font-size:0.9rem; color:var(--text-light);">Header Row:</label>
-        <input type="number" id="baseHeaderRow" value="1" min="1" style="width: 60px;">
+      <div class="row-input-group">
+        <label>Header Row:</label>
+        <input type="number" id="baseHeaderRow" value="1" min="1">
       </div>
     </div>
 
@@ -241,15 +249,24 @@
 
     <div class="control-group">
       <select id="sourceSheets"><option>Wait for file...</option></select>
+    </div>
+
+    <div class="control-group" style="background: #EEF2FF; padding: 10px; border-radius: 8px; border: 1px solid #E0E7FF;">
+      <div class="row-input-group">
+        <label><i class="fa-solid fa-heading"></i> Header Row:</label>
+        <input type="number" id="sourceHeaderRow" value="1" min="1">
+      </div>
       
-      <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
-        <label style="font-size:0.9rem; color:var(--text-light);">Header Row:</label>
-        <input type="number" id="sourceHeaderRow" value="1" min="1" style="width: 60px;">
+      <div style="color:#aaa;">|</div>
+
+      <div class="row-input-group">
+        <label><i class="fa-solid fa-play"></i> Start Row:</label>
+        <input type="number" id="sourceStartRow" placeholder="Auto" min="1">
       </div>
 
-      <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
-        <label style="font-size:0.9rem; color:var(--text-light);">Last Row:</label>
-        <input type="number" id="sourceLastRow" placeholder="Auto" min="1" style="width: 70px;">
+      <div class="row-input-group">
+        <label><i class="fa-solid fa-stop"></i> End Row:</label>
+        <input type="number" id="sourceEndRow" placeholder="Auto" min="1">
       </div>
     </div>
 
@@ -270,7 +287,7 @@
     
     <div id="mappingArea" class="mapping-container">
       <div style="padding: 20px; text-align: center; color: var(--text-light);">
-        Upload files and select headers to begin mapping...
+        Upload files to begin mapping...
       </div>
     </div>
   </div>
@@ -296,7 +313,7 @@ function updateFileName(inputId, spanId) {
   }
 }
 
-function renderPreview(containerId, data) {
+function renderPreview(containerId, data, startRowIndex = 0) {
   const container = document.getElementById(containerId);
   container.style.display = 'block';
   if(!data || data.length === 0) return;
@@ -306,7 +323,9 @@ function renderPreview(containerId, data) {
   
   let html = `<table class="preview-table">`;
   previewData.forEach((row, i) => {
-    html += `<tr><td style="background:#f4f4f4; width:30px;">${i+1}</td>`;
+    // Show actual Excel row number (Index + Start + 1)
+    const actualRow = startRowIndex + i + 1;
+    html += `<tr><td style="background:#f4f4f4; width:30px; text-align:center;">${actualRow}</td>`;
     row.forEach(cell => {
       html += `<td>${cell !== undefined ? cell : ""}</td>`;
     });
@@ -365,7 +384,7 @@ function loadBase() {
   buildMapping();
 }
 
-/* ---------- SOURCE FILE LOGIC ---------- */
+/* ---------- SOURCE FILE LOGIC (UPDATED) ---------- */
 document.getElementById("sourceFile").onchange = e => {
   updateFileName("sourceFile", "sourceFileName");
   readExcel(e.target.files[0], wb => {
@@ -374,55 +393,68 @@ document.getElementById("sourceFile").onchange = e => {
   });
 };
 
-// Reset Last Row Input when Sheet changes
 document.getElementById("sourceSheets").onchange = () => {
-  document.getElementById("sourceLastRow").value = ""; 
+  // Reset custom range when sheet changes
+  document.getElementById("sourceStartRow").value = "";
+  document.getElementById("sourceEndRow").value = "";
   loadSource();
 };
 
 document.getElementById("sourceHeaderRow").oninput = loadSource;
-document.getElementById("sourceLastRow").oninput = loadSource;
+document.getElementById("sourceStartRow").oninput = loadSource;
+document.getElementById("sourceEndRow").oninput = loadSource;
 
 function loadSource() {
   if (!sourceWB) return;
   const sheetName = document.getElementById("sourceSheets").value;
-  const headerRowInput = document.getElementById("sourceHeaderRow").value;
-  const lastRowInput = document.getElementById("sourceLastRow");
+  const headerRowInput = document.getElementById("sourceHeaderRow");
+  const startRowInput = document.getElementById("sourceStartRow");
+  const endRowInput = document.getElementById("sourceEndRow");
 
-  if (!sheetName || !headerRowInput) return;
-  const headerRowIdx = parseInt(headerRowInput);
+  if (!sheetName || !headerRowInput.value) return;
+
+  const headerRowIdx = parseInt(headerRowInput.value); // 1-based
 
   // Read ALL data first
   const allData = XLSX.utils.sheet_to_json(sourceWB.Sheets[sheetName], { 
     header: 1, raw: false, dateNF: 'yyyy-mm-dd' 
   });
 
-  // Auto-set Last Row if empty
-  if(lastRowInput.value === "") {
-    lastRowInput.value = allData.length;
+  // 1️⃣ AUTO-CALCULATE DEFAULTS if inputs are empty
+  if(startRowInput.value === "") {
+    // Default Start = Header + 1
+    startRowInput.placeholder = headerRowIdx + 1;
   }
-  
-  let lastRowIdx = parseInt(lastRowInput.value);
-  
-  // Validation: Ensure valid range
-  if(lastRowIdx > allData.length) lastRowIdx = allData.length;
-  if(lastRowIdx < headerRowIdx) lastRowIdx = headerRowIdx;
+  if(endRowInput.value === "") {
+    // Default End = Last Row of File
+    endRowInput.placeholder = allData.length;
+  }
 
-  // ✂️ SLICE DATA: From Header to Last Row
-  const relevantData = allData.slice(0, lastRowIdx);
+  // 2️⃣ DETERMINE ACTUAL RANGE
+  let startRowIdx = startRowInput.value ? parseInt(startRowInput.value) : (headerRowIdx + 1);
+  let endRowIdx = endRowInput.value ? parseInt(endRowInput.value) : allData.length;
 
-  // Define Headers and Body
-  if (headerRowIdx > 0 && relevantData.length >= headerRowIdx) {
-    sourceHeaders = relevantData[headerRowIdx - 1];
-    
-    // Data is everything AFTER the header row, up to the cut-off
-    sourceData = relevantData.slice(headerRowIdx); 
-    
+  // Validation
+  if (startRowIdx < 1) startRowIdx = 1;
+  if (endRowIdx > allData.length) endRowIdx = allData.length;
+  if (endRowIdx < startRowIdx) endRowIdx = startRowIdx; // Prevent negative range
+
+  // 3️⃣ FETCH HEADERS (From Header Row)
+  if (headerRowIdx > 0 && allData.length >= headerRowIdx) {
+    sourceHeaders = allData[headerRowIdx - 1];
     document.getElementById("sourceCols").innerHTML = `<strong>Detected Columns:</strong> ${sourceHeaders.join(", ")}`;
-    
-    // Preview uses the sliced data so user sees exactly what will be imported
-    renderPreview("sourcePreview", relevantData);
   }
+
+  // 4️⃣ FETCH DATA (From Start to End Range)
+  // .slice(start, end) -> start is inclusive, end is exclusive in JS arrays.
+  // Excel Rows are 1-based. 
+  // If Start=50, index=49. If End=70, we want to include index 69.
+  // slice(49, 70) gives indices 49...69. Perfect.
+  sourceData = allData.slice(startRowIdx - 1, endRowIdx);
+
+  // 5️⃣ RENDER PREVIEW (Show specific slice)
+  // Pass (startRowIdx - 1) so preview shows correct Excel row numbers (e.g. 50, 51...)
+  renderPreview("sourcePreview", sourceData, startRowIdx - 1);
 
   buildMapping();
 }
@@ -432,7 +464,7 @@ function addBaseColumn() {
   const colName = document.getElementById("newBaseCol").value.trim();
   if (!colName || !baseWB) return;
   baseHeaders.push(colName);
-  updateSheetInMemory(baseWB, "baseSheets", baseHeaders);
+  updateSheetInMemory(baseWB, "baseSheets", baseHeaders, "baseHeaderRow");
   loadBase(); 
   document.getElementById("newBaseCol").value = "";
 }
@@ -441,21 +473,21 @@ function addSourceColumn() {
   const colName = document.getElementById("newSourceCol").value.trim();
   if (!colName || !sourceWB) return;
   sourceHeaders.push(colName);
-  updateSheetInMemory(sourceWB, "sourceSheets", sourceHeaders);
+  updateSheetInMemory(sourceWB, "sourceSheets", sourceHeaders, "sourceHeaderRow");
   loadSource(); 
   document.getElementById("newSourceCol").value = "";
 }
 
-function updateSheetInMemory(workbook, selectId, newHeaders) {
+function updateSheetInMemory(workbook, selectId, newHeaders, headerInputId) {
   const sheetName = document.getElementById(selectId).value;
-  const headerRowIdx = parseInt(document.getElementById(selectId === "baseSheets" ? "baseHeaderRow" : "sourceHeaderRow").value) - 1;
+  const headerRowIdx = parseInt(document.getElementById(headerInputId).value) - 1;
+  
   let data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
   
   if(data[headerRowIdx]) {
       while(data[headerRowIdx].length < newHeaders.length) data[headerRowIdx].push("");
       data[headerRowIdx][newHeaders.length - 1] = newHeaders[newHeaders.length - 1];
   }
-
   for (let i = 0; i < data.length; i++) {
      if(i !== headerRowIdx) {
        while(data[i].length < newHeaders.length) data[i].push("");
@@ -514,8 +546,12 @@ function generateExcel() {
   const headerRowIdx = parseInt(document.getElementById("baseHeaderRow").value) - 1;
 
   let baseData = XLSX.utils.sheet_to_json(baseSheet, { header: 1 });
+  
+  // Keep everything ABOVE header row + Header Row itself
   const topRows = baseData.slice(0, headerRowIdx + 1); 
   const baseHeaderRow = topRows[headerRowIdx];
+  
+  // Existing data rows (start after header)
   let existingRows = baseData.slice(headerRowIdx + 1);
 
   existingRows = existingRows.map(r => {
@@ -523,6 +559,7 @@ function generateExcel() {
     return r;
   });
 
+  // Map Source Data (using sliced sourceData)
   const newRows = sourceData.map(r => {
     let row = new Array(baseHeaderRow.length).fill("");
     sourceHeaders.forEach((h, i) => {
