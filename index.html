@@ -1,4 +1,5 @@
-<!-- Version 6 -->
+<!-- Version 7 -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,14 +23,14 @@
       --success: #10B981;
     }
 
-    * { box-sizing: border_box; }
+    * { box-sizing: border-box; }
     
     body {
       font-family: 'Inter', sans-serif;
       background-color: var(--bg);
       color: var(--text-main);
       margin: 0;
-      padding: 40px 20px;
+      padding: 20px;
       display: flex;
       justify-content: center;
     }
@@ -39,21 +40,62 @@
       max-width: 1000px;
       display: flex;
       flex-direction: column;
-      gap: 25px;
+      gap: 20px;
       animation: fadeIn 0.8s ease-in-out;
+      position: relative;
     }
 
     h1, h2, h3 { font-family: 'Poppins', sans-serif; margin: 0; }
     
-    .app-header { text-align: center; margin-bottom: 20px; }
-    .app-header h1 { color: var(--primary); font-size: 2.2rem; }
-    .app-header p { color: var(--text-light); margin-top: 5px; }
+    .app-header { text-align: center; margin-bottom: 10px; padding-top: 10px; }
+    .app-header h1 { color: var(--primary); font-size: 2rem; }
+    .app-header p { color: var(--text-light); margin-top: 5px; font-size: 0.95rem;}
+
+    /* 🔥 UPDATED: TOP CONTROLS POSITION */
+    .top-controls {
+      position: absolute;
+      top: 20px;   /* Pehle 0 tha, ab thoda neeche kiya */
+      right: 20px; /* Pehle 0 tha, ab corner se door kiya */
+      display: flex;
+      gap: 10px;
+      z-index: 50;
+    }
+
+    .info-btn {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--primary);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+    .info-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
+
+    .lang-select {
+      padding: 8px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: white;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      font-weight: 500;
+      color: var(--text-main);
+    }
 
     /* CARDS */
     .card {
       background: var(--card-bg);
       border-radius: 12px;
-      padding: 25px;
+      padding: 20px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       border: 1px solid var(--border);
     }
@@ -78,6 +120,7 @@
       justify-content: center;
       font-weight: bold;
       font-size: 0.9rem;
+      flex-shrink: 0;
     }
 
     /* INPUTS & ZONES */
@@ -96,11 +139,11 @@
 
     .drop-zone:hover { border-color: var(--primary); background: #EEF2FF; }
     .drop-zone i { font-size: 1.5rem; color: var(--text-light); margin-bottom: 8px; }
-    .file-name { color: var(--primary); font-weight: 600; display: block; margin-top:5px;}
+    .file-name { color: var(--primary); font-weight: 600; display: block; margin-top:5px; word-break: break-all;}
 
     .control-group {
       display: flex;
-      gap: 15px;
+      gap: 10px;
       margin-top: 15px;
       flex-wrap: wrap;
       align-items: center;
@@ -113,20 +156,23 @@
       border-radius: 6px;
       font-size: 0.9rem;
       outline: none;
+      width: 100%; 
     }
     
-    select { flex-grow: 1; min-width: 200px; }
+    select { min-width: 150px; flex-grow: 1; }
     
     .row-input-group {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 8px;
       background: #F9FAFB;
-      padding: 5px 10px;
+      padding: 8px 12px;
       border-radius: 6px;
       border: 1px solid #eee;
+      flex-grow: 1;
+      justify-content: space-between;
     }
-    .row-input-group label { font-size: 0.85rem; color: var(--text-light); font-weight: 500; }
+    .row-input-group label { font-size: 0.85rem; color: var(--text-light); font-weight: 500; white-space: nowrap; }
     .row-input-group input { width: 70px; padding: 5px; text-align: center; border-color: #ddd; }
 
     /* Buttons */
@@ -141,106 +187,127 @@
       transition: background 0.3s;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 5px;
       white-space: nowrap;
     }
     button:hover { background: var(--primary-hover); }
-    .btn-secondary { background: var(--text-light); font-size: 0.9rem; }
-    .btn-success { background: var(--success); width: 100%; justify-content: center; font-size: 1.1rem; padding: 15px;}
+    .btn-secondary { background: var(--text-light); font-size: 0.9rem; width: auto; }
+    .btn-success { background: var(--success); width: 100%; padding: 15px; font-size: 1.1rem; margin-bottom: 20px;}
     .btn-success:hover { background: #059669; }
 
-    /* PREVIEW TABLE */
+    /* PREVIEW & MAPPING */
     .preview-box {
       margin-top: 15px;
-      max-height: 250px; /* Increased height slightly */
+      max-height: 250px;
       overflow: auto;
       border: 1px solid var(--border);
       border-radius: 6px;
       background: #fff;
       display: none; 
     }
-    .preview-table {
-      width: 100%;
-      border-collapse: separate; /* Required for sticky header */
-      border-spacing: 0;
-      font-size: 0.8rem;
-    }
-    .preview-table th, .preview-table td {
-      border-bottom: 1px solid #ddd;
-      border-right: 1px solid #eee;
-      padding: 8px;
-      white-space: nowrap;
-    }
-    /* Sticky Header Styling */
-    .preview-table thead th {
-      background: #f1f5f9;
-      color: var(--text-main);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      border-top: none;
-      font-weight: 600;
-    }
+    .preview-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.8rem; }
+    .preview-table th, .preview-table td { border-bottom: 1px solid #ddd; border-right: 1px solid #eee; padding: 8px; white-space: nowrap; }
+    .preview-table thead th { background: #f1f5f9; color: var(--text-main); position: sticky; top: 0; z-index: 10; border-top: none; font-weight: 600; }
 
-    /* MAPPING TABLE */
-    .mapping-container {
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-    .map-table { width: 100%; border-collapse: collapse; }
-    .map-table th {
-      background: #F9FAFB;
-      position: sticky;
-      top: 0;
-      text-align: left;
-      padding: 12px 15px;
-      font-size: 0.85rem;
-      color: var(--text-light);
-      border-bottom: 1px solid var(--border);
-      z-index: 10;
-    }
+    .mapping-container { max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; }
+    .map-table { width: 100%; border-collapse: collapse; min-width: 500px; }
+    .map-table th { background: #F9FAFB; position: sticky; top: 0; text-align: left; padding: 12px 15px; font-size: 0.85rem; color: var(--text-light); border-bottom: 1px solid var(--border); z-index: 10; }
     .map-table td { padding: 10px 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
     
+    /* MODAL STYLES */
+    .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+    .modal-content { background-color: #fff; margin: 10% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: fadeIn 0.3s; }
+    .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f9fafb; border-radius: 12px 12px 0 0; }
+    .modal-header h2 { font-size: 1.2rem; color: var(--primary); }
+    .close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+    .close:hover { color: #000; }
+    .modal-body { padding: 20px; line-height: 1.6; color: var(--text-main); font-size: 0.95rem;}
+    .feature-icon { color: var(--success); margin-right: 5px; }
+
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* RESPONSIVE */
+    @media (min-width: 768px) {
+      .control-group { flex-wrap: nowrap; }
+      select, input[type="text"] { width: auto; }
+      .app-header h1 { font-size: 2.2rem; }
+    }
+
+    @media (max-width: 767px) {
+      body { padding: 10px; }
+      .container { gap: 15px; margin-top: 50px; } /* Push down for header controls */
+      .card { padding: 15px; }
+      /* Fixed Mobile Alignment too */
+      .top-controls { top: 10px; right: 10px; width: auto; justify-content: flex-end; }
+      .app-header { margin-top: 10px; }
+      .row-input-group { width: 100%; }
+      .row-input-group input { width: 80px; }
+      .control-group div[style*="color:#aaa"] { display: none; }
+      .control-group { gap: 10px; align-items: stretch; }
+      .btn-secondary { width: 100%; justify-content: center; }
+    }
   </style>
 </head>
 
 <body>
 
+<div class="top-controls">
+  <select class="lang-select" onchange="setLanguage(this.value)">
+    <option value="en" selected>🇬🇧 English</option>
+    <option value="hinglish">🇮🇳 Hinglish</option>
+    <option value="hi">🕉️ Hindi</option>
+  </select>
+  <button class="info-btn" onclick="openModal()" title="Help & Info">
+    <i class="fa-solid fa-info"></i>
+  </button>
+</div>
+
+<div id="infoModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitle"><i class="fa-solid fa-circle-info"></i> App Info & Guide</h2>
+      <span class="close" onclick="closeModal()">&times;</span>
+    </div>
+    <div class="modal-body" id="modalBody">
+      </div>
+  </div>
+</div>
+
 <div class="container">
   
   <div class="app-header">
     <h1><i class="fa-solid fa-layer-group"></i> DataMap Pro</h1>
-    <p>Flexible Excel Mapping with Range Selection</p>
+    <p data-key="subtitle">Flexible Excel Mapping with Range Selection</p>
   </div>
 
   <div class="card">
     <div class="card-header">
       <div class="step-badge">1</div>
-      <h3>Base Template</h3>
+      <h3 data-key="step1Title">Base Template</h3>
     </div>
     
     <div class="drop-zone" onclick="document.getElementById('baseFile').click()">
       <i class="fa-solid fa-file-excel"></i>
-      <p>Click to upload Base Excel File</p>
+      <p data-key="uploadBase">Click to upload Base Excel File</p>
       <span id="baseFileName" class="file-name"></span>
     </div>
     <input type="file" id="baseFile" accept=".xlsx, .xls">
 
     <div class="control-group">
-      <select id="baseSheets"><option>Wait for file...</option></select>
+      <select id="baseSheets"><option data-key="waitFile">Wait for file...</option></select>
       
       <div class="row-input-group">
-        <label>Header Row:</label>
+        <label data-key="headerRow">Header Row:</label>
         <input type="number" id="baseHeaderRow" value="1" min="1">
       </div>
     </div>
 
     <div class="control-group" style="padding-top:10px;">
-      <input type="text" id="newBaseCol" placeholder="Add new column to Base">
-      <button onclick="addBaseColumn()" class="btn-secondary"><i class="fa-solid fa-plus"></i> Add</button>
+      <input type="text" id="newBaseCol" placeholder="Add new column name...">
+      <button onclick="addBaseColumn()" class="btn-secondary">
+        <i class="fa-solid fa-plus"></i> <span data-key="addBtn">Add</span>
+      </button>
     </div>
 
     <div id="basePreview" class="preview-box"></div>
@@ -250,42 +317,44 @@
   <div class="card">
     <div class="card-header">
       <div class="step-badge">2</div>
-      <h3>Source Data</h3>
+      <h3 data-key="step2Title">Source Data</h3>
     </div>
 
     <div class="drop-zone" onclick="document.getElementById('sourceFile').click()">
       <i class="fa-solid fa-file-import"></i>
-      <p>Click to upload Source Data File</p>
+      <p data-key="uploadSource">Click to upload Source Data File</p>
       <span id="sourceFileName" class="file-name"></span>
     </div>
     <input type="file" id="sourceFile" accept=".xlsx, .xls">
 
     <div class="control-group">
-      <select id="sourceSheets"><option>Wait for file...</option></select>
+      <select id="sourceSheets"><option data-key="waitFile">Wait for file...</option></select>
     </div>
 
     <div class="control-group" style="background: #EEF2FF; padding: 10px; border-radius: 8px; border: 1px solid #E0E7FF;">
       <div class="row-input-group">
-        <label><i class="fa-solid fa-heading"></i> Header Row:</label>
+        <label><i class="fa-solid fa-heading"></i> <span data-key="headerRow">Header Row:</span></label>
         <input type="number" id="sourceHeaderRow" value="1" min="1">
       </div>
       
       <div style="color:#aaa;">|</div>
 
       <div class="row-input-group">
-        <label><i class="fa-solid fa-play"></i> Start Row:</label>
+        <label><i class="fa-solid fa-play"></i> <span data-key="startRow">Start Row:</span></label>
         <input type="number" id="sourceStartRow" placeholder="Auto" min="1">
       </div>
 
       <div class="row-input-group">
-        <label><i class="fa-solid fa-stop"></i> End Row:</label>
+        <label><i class="fa-solid fa-stop"></i> <span data-key="endRow">End Row:</span></label>
         <input type="number" id="sourceEndRow" placeholder="Auto" min="1">
       </div>
     </div>
 
     <div class="control-group" style="padding-top:10px;">
-      <input type="text" id="newSourceCol" placeholder="Add new column to Source">
-      <button onclick="addSourceColumn()" class="btn-secondary"><i class="fa-solid fa-plus"></i> Add</button>
+      <input type="text" id="newSourceCol" placeholder="Add new column name...">
+      <button onclick="addSourceColumn()" class="btn-secondary">
+        <i class="fa-solid fa-plus"></i> <span data-key="addBtn">Add</span>
+      </button>
     </div>
 
     <div id="sourcePreview" class="preview-box"></div>
@@ -295,28 +364,174 @@
   <div class="card">
     <div class="card-header">
       <div class="step-badge">3</div>
-      <h3>Map Columns</h3>
+      <h3 data-key="step3Title">Map Columns</h3>
     </div>
     
     <div id="mappingArea" class="mapping-container">
-      <div style="padding: 20px; text-align: center; color: var(--text-light);">
+      <div style="padding: 20px; text-align: center; color: var(--text-light);" data-key="mapPlaceholder">
         Upload files to begin mapping...
       </div>
     </div>
   </div>
 
   <button onclick="generateExcel()" class="btn-success">
-    <i class="fa-solid fa-file-export"></i> Generate Final Excel
+    <i class="fa-solid fa-file-export"></i> <span data-key="genBtn">Generate Final Excel</span>
   </button>
 
 </div>
 
 <script>
+/* ---------- LANGUAGE DICTIONARY ---------- */
+const translations = {
+  en: {
+    subtitle: "Flexible Excel Mapping with Range Selection",
+    step1Title: "Base Template",
+    uploadBase: "Click to upload Base Excel File",
+    waitFile: "Wait for file...",
+    headerRow: "Header Row:",
+    addBtn: "Add",
+    step2Title: "Source Data",
+    uploadSource: "Click to upload Source Data File",
+    startRow: "Start Row:",
+    endRow: "End Row:",
+    step3Title: "Map Columns",
+    mapPlaceholder: "Upload files to begin mapping...",
+    genBtn: "Generate Final Excel",
+    detected: "Detected Columns:",
+    srcCol: "Source Column",
+    tgtCol: "Base Column (Target)",
+    ignore: "-- Ignore --",
+    modalTitle: `<i class="fa-solid fa-circle-info"></i> App Info & Guide`,
+    modalContent: `
+      <h3>🚀 App Features:</h3>
+      <ul>
+        <li><strong>Smart Mapping:</strong> Map any Source data into your Base template structure.</li>
+        <li><strong>Range Selection:</strong> Define Start and End rows to capture specific data.</li>
+        <li><strong>New Columns:</strong> Add temporary columns on the fly without opening Excel.</li>
+        <li><strong>Live Preview:</strong> Instantly visualize data as you configure settings.</li>
+      </ul>
+      <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+      <h3>📖 How to Use:</h3>
+      <ol>
+        <li><strong>Step 1 (Base):</strong> Upload your main Template. Add headers if needed.</li>
+        <li><strong>Step 2 (Source):</strong> Upload data source. Use Start/End rows to skip junk data.</li>
+        <li><strong>Step 3 (Map):</strong> Match Source columns to Base columns in the table below.</li>
+        <li><strong>Final:</strong> Click "Generate" to download the merged file.</li>
+      </ol>`
+  },
+  hinglish: {
+    subtitle: "Range Selection ke saath Flexible Excel Mapping",
+    step1Title: "Base Template",
+    uploadBase: "Base Excel File upload karne ke liye click karein",
+    waitFile: "File ka wait karein...",
+    headerRow: "Header Row:",
+    addBtn: "Add Karein",
+    step2Title: "Source Data",
+    uploadSource: "Source Data File upload karne ke liye click karein",
+    startRow: "Shuru Row:",
+    endRow: "Khatam Row:",
+    step3Title: "Columns Map Karein",
+    mapPlaceholder: "Mapping shuru karne ke liye files upload karein...",
+    genBtn: "Final Excel Generate Karein",
+    detected: "Columns Mile:",
+    srcCol: "Source Column",
+    tgtCol: "Base Column (Target)",
+    ignore: "-- Chhod dein (Ignore) --",
+    modalTitle: `<i class="fa-solid fa-circle-info"></i> App Info aur Guide`,
+    modalContent: `
+      <h3>🚀 App Features:</h3>
+      <ul>
+        <li><strong>Smart Mapping:</strong> Kisi bhi Source file ka data Base template mein map karein.</li>
+        <li><strong>Range Selection:</strong> Start aur End rows control karke specific data uthayein.</li>
+        <li><strong>New Columns:</strong> Bina Excel khole naye columns add karein.</li>
+        <li><strong>Live Preview:</strong> Data upload karte hi live check karein.</li>
+      </ul>
+      <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+      <h3>📖 Kaise Use Karein:</h3>
+      <ol>
+        <li><strong>Step 1 (Base):</strong> Apni main Template file upload karein.</li>
+        <li><strong>Step 2 (Source):</strong> Jaha se data copy karna hai, wo file upload karein.</li>
+        <li><strong>Step 3 (Map):</strong> Niche table mein match karein ki Source ka kaunsa column Base mein jayega.</li>
+        <li><strong>Final:</strong> "Generate" par click karein aur download karein! 🎉</li>
+      </ol>`
+  },
+  hi: {
+    subtitle: "रेंज चयन के साथ फ्लेक्सिबल एक्सेल मैपिंग",
+    step1Title: "आधार टेम्पलेट (Base)",
+    uploadBase: "आधार एक्सेल फाइल अपलोड करने के लिए क्लिक करें",
+    waitFile: "फाइल की प्रतीक्षा करें...",
+    headerRow: "शीर्ष पंक्ति (Header):",
+    addBtn: "जोड़ें",
+    step2Title: "स्रोत डेटा (Source)",
+    uploadSource: "स्रोत डेटा फाइल अपलोड करने के लिए क्लिक करें",
+    startRow: "आरंभ पंक्ति:",
+    endRow: "अंतिम पंक्ति:",
+    step3Title: "कॉलम मिलाान (Mapping)",
+    mapPlaceholder: "मैपिंग शुरू करने के लिए फाइलें अपलोड करें...",
+    genBtn: "अंतिम एक्सेल बनाएं (Generate)",
+    detected: "खोजे गए कॉलम:",
+    srcCol: "स्रोत कॉलम",
+    tgtCol: "आधार कॉलम (लक्ष्य)",
+    ignore: "-- छोड़ दें --",
+    modalTitle: `<i class="fa-solid fa-circle-info"></i> ऐप जानकारी और गाइड`,
+    modalContent: `
+      <h3>🚀 ऐप की विशेषताएं:</h3>
+      <ul>
+        <li><strong>स्मार्ट मैपिंग:</strong> किसी भी स्रोत डेटा को अपने आधार टेम्पलेट में मैप करें।</li>
+        <li><strong>रेंज चयन:</strong> विशिष्ट डेटा लेने के लिए आरंभ और अंत पंक्तियाँ निर्धारित करें।</li>
+        <li><strong>नए कॉलम:</strong> एक्सेल खोले बिना नए कॉलम जोड़ें।</li>
+        <li><strong>लाइव पूर्वावलोकन:</strong> सेटिंग्स कॉन्फ़िगर करते समय डेटा तुरंत देखें।</li>
+      </ul>
+      <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+      <h3>📖 उपयोग कैसे करें:</h3>
+      <ol>
+        <li><strong>चरण 1 (Base):</strong> अपना मुख्य टेम्पलेट अपलोड करें।</li>
+        <li><strong>चरण 2 (Source):</strong> डेटा स्रोत अपलोड करें। बेकार डेटा छोड़ने के लिए पंक्तियाँ सेट करें।</li>
+        <li><strong>चरण 3 (Map):</strong> नीचे दी गई तालिका में स्रोत कॉलम को आधार कॉलम से मिलाएं।</li>
+        <li><strong>अंतिम:</strong> मर्ज की गई फाइल डाउनलोड करने के लिए "Generate" पर क्लिक करें।</li>
+      </ol>`
+  }
+};
+
+let currentLang = 'en';
+
+function setLanguage(lang) {
+  currentLang = lang;
+  const t = translations[lang];
+
+  document.querySelectorAll("[data-key]").forEach(el => {
+    const key = el.getAttribute("data-key");
+    if(t[key]) el.textContent = t[key];
+  });
+
+  document.getElementById("newBaseCol").placeholder = lang === 'hi' ? "नया कॉलम नाम..." : "Add new column name...";
+  document.getElementById("newSourceCol").placeholder = lang === 'hi' ? "नया कॉलम नाम..." : "Add new column name...";
+
+  document.getElementById("modalTitle").innerHTML = t.modalTitle;
+  document.getElementById("modalBody").innerHTML = t.modalContent;
+
+  if(baseHeaders.length > 0) {
+      document.getElementById("baseCols").innerHTML = `<strong>${t.detected}</strong> ${baseHeaders.join(", ")}`;
+  }
+  if(sourceHeaders.length > 0) {
+      document.getElementById("sourceCols").innerHTML = `<strong>${t.detected}</strong> ${sourceHeaders.join(", ")}`;
+  }
+  
+  buildMapping();
+}
+
+/* ---------- MODAL LOGIC ---------- */
+const modal = document.getElementById("infoModal");
+function openModal() { modal.style.display = "block"; }
+function closeModal() { modal.style.display = "none"; }
+window.onclick = function(event) { if (event.target == modal) modal.style.display = "none"; }
+
+/* ---------- EXISTING LOGIC ---------- */
 let baseWB, sourceWB;
 let baseHeaders = [], sourceHeaders = [];
 let sourceData = [];
 
-/* ---------- UI HELPERS ---------- */
+/* UI HELPERS */
 function updateFileName(inputId, spanId) {
   const fileInput = document.getElementById(inputId);
   const span = document.getElementById(spanId);
@@ -326,17 +541,15 @@ function updateFileName(inputId, spanId) {
   }
 }
 
-// 🔥 UPDATED PREVIEW FUNCTION WITH HEADERS
 function renderPreview(containerId, data, startRowIndex = 0, headers = []) {
   const container = document.getElementById(containerId);
   container.style.display = 'block';
   if(!data || data.length === 0) return;
 
-  const previewData = data.slice(0, 20); // Top 20 rows
+  const previewData = data.slice(0, 20); 
   
   let html = `<table class="preview-table">`;
 
-  // 1️⃣ Render THEAD (Header Row)
   if (headers.length > 0) {
     html += `<thead><tr><th style="width:40px; text-align:center;">#</th>`;
     headers.forEach(h => {
@@ -345,13 +558,11 @@ function renderPreview(containerId, data, startRowIndex = 0, headers = []) {
     html += `</tr></thead>`;
   }
 
-  // 2️⃣ Render TBODY (Data Rows)
   html += `<tbody>`;
   previewData.forEach((row, i) => {
     const actualRow = startRowIndex + i + 1;
     html += `<tr><td style="background:#f8f9fa; text-align:center; font-weight:bold; color:#666;">${actualRow}</td>`;
     
-    // Iterate columns to match header count (fixes alignment issues)
     const colCount = Math.max(row.length, headers.length);
     for(let c=0; c < colCount; c++) {
        const cell = row[c];
@@ -379,7 +590,7 @@ function readExcel(file, cb) {
   reader.readAsArrayBuffer(file);
 }
 
-/* ---------- BASE FILE LOGIC ---------- */
+/* BASE FILE LOGIC */
 document.getElementById("baseFile").onchange = e => {
   updateFileName("baseFile", "baseFileName");
   readExcel(e.target.files[0], wb => {
@@ -405,16 +616,15 @@ function loadBase() {
 
   if (headerRowIdx > 0 && data.length >= headerRowIdx) {
     baseHeaders = data[headerRowIdx - 1]; 
-    document.getElementById("baseCols").innerHTML = `<strong>Detected Columns:</strong> ${baseHeaders.join(", ")}`;
+    const t = translations[currentLang];
+    document.getElementById("baseCols").innerHTML = `<strong>${t.detected}</strong> ${baseHeaders.join(", ")}`;
   }
 
-  // Pass headers to preview
   renderPreview("basePreview", data, 0, baseHeaders);
-
   buildMapping();
 }
 
-/* ---------- SOURCE FILE LOGIC (UPDATED) ---------- */
+/* SOURCE FILE LOGIC */
 document.getElementById("sourceFile").onchange = e => {
   updateFileName("sourceFile", "sourceFileName");
   readExcel(e.target.files[0], wb => {
@@ -448,7 +658,6 @@ function loadSource() {
     header: 1, raw: false, dateNF: 'yyyy-mm-dd' 
   });
 
-  // Defaults
   if(startRowInput.value === "") startRowInput.placeholder = headerRowIdx + 1;
   if(endRowInput.value === "") endRowInput.placeholder = allData.length;
 
@@ -459,22 +668,18 @@ function loadSource() {
   if (endRowIdx > allData.length) endRowIdx = allData.length;
   if (endRowIdx < startRowIdx) endRowIdx = startRowIdx; 
 
-  // Capture Headers
   if (headerRowIdx > 0 && allData.length >= headerRowIdx) {
     sourceHeaders = allData[headerRowIdx - 1];
-    document.getElementById("sourceCols").innerHTML = `<strong>Detected Columns:</strong> ${sourceHeaders.join(", ")}`;
+    const t = translations[currentLang];
+    document.getElementById("sourceCols").innerHTML = `<strong>${t.detected}</strong> ${sourceHeaders.join(", ")}`;
   }
 
-  // Slice Data
   sourceData = allData.slice(startRowIdx - 1, endRowIdx);
-
-  // 🔥 Pass HEADERS to Preview
   renderPreview("sourcePreview", sourceData, startRowIdx - 1, sourceHeaders);
-
   buildMapping();
 }
 
-/* ---------- ADD COLUMN FUNCTIONS ---------- */
+/* ADD COLUMN FUNCTIONS */
 function addBaseColumn() {
   const colName = document.getElementById("newBaseCol").value.trim();
   if (!colName || !baseWB) return;
@@ -511,16 +716,24 @@ function updateSheetInMemory(workbook, selectId, newHeaders, headerInputId) {
   workbook.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(data);
 }
 
-/* ---------- MAPPING ---------- */
+/* MAPPING */
 function buildMapping() {
-  if (baseHeaders.length === 0 || sourceHeaders.length === 0) return;
+  const t = translations[currentLang];
+  
+  if (baseHeaders.length === 0 || sourceHeaders.length === 0) {
+    document.getElementById("mappingArea").innerHTML = `
+      <div style="padding: 20px; text-align: center; color: var(--text-light);">
+        ${t.mapPlaceholder}
+      </div>`;
+    return;
+  }
 
   let html = `<table class="map-table">
     <thead>
       <tr>
-        <th width="40%">Source Column</th>
+        <th width="40%">${t.srcCol}</th>
         <th width="10%" style="text-align:center;"><i class="fa-solid fa-arrow-right"></i></th>
-        <th width="50%">Base Column (Target)</th>
+        <th width="50%">${t.tgtCol}</th>
       </tr>
     </thead><tbody>`;
 
@@ -533,7 +746,7 @@ function buildMapping() {
       <td style="text-align:center; color:var(--text-light);">→</td>
       <td>
         <select data-src="${sc}" style="${colorStyle}">
-          <option value="">-- Ignore --</option>
+          <option value="">${t.ignore}</option>
           ${baseHeaders.map(bc => {
              const isSel = bc === sc ? "selected" : "";
              return `<option value="${bc}" ${isSel}>${bc}</option>`;
@@ -547,7 +760,7 @@ function buildMapping() {
   document.getElementById("mappingArea").innerHTML = html;
 }
 
-/* ---------- GENERATE ---------- */
+/* GENERATE */
 function generateExcel() {
   const map = {};
   document.querySelectorAll("#mappingArea select").forEach(s => {
@@ -562,11 +775,9 @@ function generateExcel() {
 
   let baseData = XLSX.utils.sheet_to_json(baseSheet, { header: 1 });
   
-  // Keep everything ABOVE header row + Header Row itself
   const topRows = baseData.slice(0, headerRowIdx + 1); 
   const baseHeaderRow = topRows[headerRowIdx];
   
-  // Existing data rows (start after header)
   let existingRows = baseData.slice(headerRowIdx + 1);
 
   existingRows = existingRows.map(r => {
@@ -574,7 +785,6 @@ function generateExcel() {
     return r;
   });
 
-  // Map Source Data
   const newRows = sourceData.map(r => {
     let row = new Array(baseHeaderRow.length).fill("");
     sourceHeaders.forEach((h, i) => {
@@ -593,6 +803,8 @@ function generateExcel() {
   
   XLSX.writeFile(wb, "Final_Mapped_Output.xlsx");
 }
+
+setLanguage('en');
 </script>
 
 </body>
